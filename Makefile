@@ -1,4 +1,4 @@
-SHELL=/bin/bash -o pipefail
+SHELL=bash -o pipefail
 
 CLI := kubectl-kuttl
 GIT_VERSION_PATH := github.com/kudobuilder/kuttl/pkg/version.gitVersion
@@ -38,7 +38,7 @@ ifneq (${GOLANGCI_LINT_VER}, "$(shell ./bin/golangci-lint version --format short
 	curl -sSfL "https://raw.githubusercontent.com/golangci/golangci-lint/v${GOLANGCI_LINT_VER}/install.sh" | sh -s -- -b ./bin "v${GOLANGCI_LINT_VER}"
 endif
 	./bin/golangci-lint --timeout 5m run --build-tags integration
-	
+
 .PHONY: download
 download:  ## Downloads go dependencies
 	go mod download
@@ -85,7 +85,7 @@ cli-install:  ## Installs kubectl-kuttl to GOBIN
 
 .PHONY: generate
 # Generate code
-generate: ## Generates code 
+generate: ## Generates code
 ifneq ($(shell go list -f '{{.Version}}' -m sigs.k8s.io/controller-tools), $(shell controller-gen --version 2>/dev/null | cut -b 10-))
 	@echo "(Re-)installing controller-gen. Current version:  $(controller-gen --version 2>/dev/null | cut -b 10-). Need $(go list -f '{{.Version}}' -m sigs.k8s.io/controller-tools)"
 	go get sigs.k8s.io/controller-tools/cmd/controller-gen@$$(go list -f '{{.Version}}' -m sigs.k8s.io/controller-tools)
