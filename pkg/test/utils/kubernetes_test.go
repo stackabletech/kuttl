@@ -526,44 +526,42 @@ func TestPrettyDiff(t *testing.T) {
 
 	result, err := PrettyDiff(expected[0].(*unstructured.Unstructured), actual[0].(*unstructured.Unstructured))
 	assert.NoError(t, err)
-	assert.Equal(t, `--- Deployment:/central
-+++ Deployment:kuttl-test-thorough-hermit/central
-@@ -1,7 +1,35 @@
- apiVersion: apps/v1
- kind: Deployment
- metadata:
-+  annotations:
-+    email: support@stackrox.com
-+    meta.helm.sh/release-name: stackrox-central-services
-+    meta.helm.sh/release-namespace: kuttl-test-thorough-hermit
-+    owner: stackrox
-+  labels:
-+    app: central
-+    app.kubernetes.io/component: central
-+    app.kubernetes.io/instance: stackrox-central-services
-+    app.kubernetes.io/managed-by: Helm
-+    app.kubernetes.io/name: stackrox
-+    app.kubernetes.io/part-of: stackrox-central-services
-+    app.kubernetes.io/version: 4.3.x-160-g465d734c11
-+    helm.sh/chart: stackrox-central-services-400.3.0-160-g465d734c11
-+  managedFields: '[... elided field over 10 lines long ...]'
-   name: central
-+  namespace: kuttl-test-thorough-hermit
-+  ownerReferences:
-+  - apiVersion: platform.stackrox.io/v1alpha1
-+    blockOwnerDeletion: true
-+    controller: true
-+    kind: Central
-+    name: stackrox-central-services
-+    uid: ff834d91-0853-42b3-9460-7ebf1c659f8a
-+spec: '[... elided field over 10 lines long ...]'
- status:
--  availableReplicas: 1
-+  conditions: '[... elided field over 10 lines long ...]'
-+  observedGeneration: 2
-+  replicas: 1
-+  unavailableReplicas: 1
-+  updatedReplicas: 1
- 
-`, result)
+	assert.Equal(t, "\n\033[31m--- Deployment:/central\033[0m\n"+
+		"\033[32m+++ Deployment:kuttl-test-thorough-hermit/central\033[0m\n"+
+		"@@ -1,7 +1,35 @@\n"+
+		" apiVersion: apps/v1\n"+
+		" kind: Deployment\n"+
+		" metadata:\n"+
+		"\033[32m+  annotations:\033[0m\n"+
+		"\033[32m+    email: support@stackrox.com\033[0m\n"+
+		"\033[32m+    meta.helm.sh/release-name: stackrox-central-services\033[0m\n"+
+		"\033[32m+    meta.helm.sh/release-namespace: kuttl-test-thorough-hermit\033[0m\n"+
+		"\033[32m+    owner: stackrox\033[0m\n"+
+		"\033[32m+  labels:\033[0m\n"+
+		"\033[32m+    app: central\033[0m\n"+
+		"\033[32m+    app.kubernetes.io/component: central\033[0m\n"+
+		"\033[32m+    app.kubernetes.io/instance: stackrox-central-services\033[0m\n"+
+		"\033[32m+    app.kubernetes.io/managed-by: Helm\033[0m\n"+
+		"\033[32m+    app.kubernetes.io/name: stackrox\033[0m\n"+
+		"\033[32m+    app.kubernetes.io/part-of: stackrox-central-services\033[0m\n"+
+		"\033[32m+    app.kubernetes.io/version: 4.3.x-160-g465d734c11\033[0m\n"+
+		"\033[32m+    helm.sh/chart: stackrox-central-services-400.3.0-160-g465d734c11\033[0m\n"+
+		"\033[32m+  managedFields: '[... elided field over 10 lines long ...]'\033[0m\n"+
+		"   name: central\n"+
+		"\033[32m+  namespace: kuttl-test-thorough-hermit\033[0m\n"+
+		"\033[32m+  ownerReferences:\033[0m\n"+
+		"\033[32m+  - apiVersion: platform.stackrox.io/v1alpha1\033[0m\n"+
+		"\033[32m+    blockOwnerDeletion: true\033[0m\n"+
+		"\033[32m+    controller: true\033[0m\n"+
+		"\033[32m+    kind: Central\033[0m\n"+
+		"\033[32m+    name: stackrox-central-services\033[0m\n"+
+		"\033[32m+    uid: ff834d91-0853-42b3-9460-7ebf1c659f8a\033[0m\n"+
+		"\033[32m+spec: '[... elided field over 10 lines long ...]'\033[0m\n"+
+		" status:\n"+
+		"\033[31m-  availableReplicas: 1\033[0m\n"+
+		"\033[32m+  conditions: '[... elided field over 10 lines long ...]'\033[0m\n"+
+		"\033[32m+  observedGeneration: 2\033[0m\n"+
+		"\033[32m+  replicas: 1\033[0m\n"+
+		"\033[32m+  unavailableReplicas: 1\033[0m\n"+
+		"\033[32m+  updatedReplicas: 1\033[0m\n \n", result)
 }

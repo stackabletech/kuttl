@@ -427,6 +427,19 @@ func countLines(k string, v interface{}) (int, error) {
 	return strings.Count(buf.String(), "\n"), nil
 }
 
+// We did not find a good library to create colorized diffs, so we do it ourselves the cheap way
+func colorizeDiff(diff string) string {
+	diffLines := strings.Split(diff, "\n")
+	for i, line := range diffLines {
+		if strings.HasPrefix(line, "+") {
+			diffLines[i] = "\033[32m" + line + "\033[0m"
+		} else if strings.HasPrefix(line, "-") {
+			diffLines[i] = "\033[31m" + line + "\033[0m"
+		}
+	}
+	return strings.Join(diffLines, "\n")
+}
+
 // PrettyDiff creates a unified diff highlighting the differences between two Kubernetes resources
 func PrettyDiff(expected *unstructured.Unstructured, actual *unstructured.Unstructured) (string, error) {
 	actualPruned := pruneLargeAdditions(expected, actual)
@@ -450,7 +463,8 @@ func PrettyDiff(expected *unstructured.Unstructured, actual *unstructured.Unstru
 		Context:  3,
 	}
 
-	return difflib.GetUnifiedDiffString(diffed)
+	diffStr, err := difflib.GetUnifiedDiffString(diffed)
+	return "\n" + colorizeDiff(diffStr), err
 }
 
 // ConvertUnstructured converts an unstructured object to the known struct. If the type is not known, then
