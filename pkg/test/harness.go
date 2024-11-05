@@ -3,6 +3,8 @@ package test
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -79,11 +81,22 @@ func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 			continue
 		}
 
+		// Calculate the namespace to use for the test case
+		// Get the sha256 hash the test case name
+		hasher := sha256.New()
+		hasher.Write([]byte(file.Name()))
+		hash := hex.EncodeToString(hasher.Sum(nil))
+
+		truncatedFileName := file.Name()
+		if len(truncatedFileName) > 32 {
+			truncatedFileName = truncatedFileName[:32]
+		}
+
 		tests = append(tests, &Case{
 			Timeout:            timeout,
 			Steps:              []*Step{},
 			Name:               file.Name(),
-			PreferredNamespace: h.TestSuite.Namespace,
+			PreferredNamespace: fmt.Sprintf("kuttl-%s-%s", hash[:10], truncatedFileName),
 			Dir:                filepath.Join(dir, file.Name()),
 			SkipDelete:         h.TestSuite.SkipDelete,
 			Suppress:           h.TestSuite.Suppress,
