@@ -97,6 +97,7 @@ func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 // GetLogger returns an initialized test logger.
 func (h *Harness) GetLogger() testutils.Logger {
 	if h.logger == nil {
+		// NOTE (@NickLarsenNZ): One instance of the logger created here
 		h.logger = testutils.NewTestLogger(h.T, "")
 	}
 
@@ -391,7 +392,9 @@ func (h *Harness) RunTests() {
 					// elapsed time calculations.
 					t.Parallel()
 
+					// NOTE (@NickLarsenNZ): One instance of the logger created here
 					test.Logger = testutils.NewTestLogger(t, test.Name)
+					// test.Logger = h.GetLogger().WithPrefix(test.Name)
 
 					if err := test.LoadTestSteps(); err != nil {
 						t.Fatal(err)

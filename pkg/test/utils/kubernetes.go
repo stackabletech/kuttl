@@ -318,14 +318,17 @@ func (r *RetryStatusWriter) Patch(ctx context.Context, obj client.Object, patch 
 func Scheme() *runtime.Scheme {
 	schemeLock.Do(func() {
 		if err := apis.AddToScheme(scheme.Scheme); err != nil {
+			// TODO (@NickLarsenNZ): Use a logger
 			fmt.Printf("failed to add API resources to the scheme: %v", err)
 			os.Exit(-1)
 		}
 		if err := apiextv1.AddToScheme(scheme.Scheme); err != nil {
+			// TODO (@NickLarsenNZ): Use a logger
 			fmt.Printf("failed to add V1 API extension resources to the scheme: %v", err)
 			os.Exit(-1)
 		}
 		if err := apiextv1beta1.AddToScheme(scheme.Scheme); err != nil {
+			// TODO (@NickLarsenNZ): Use a logger
 			fmt.Printf("failed to add V1beta1 API extension resources to the scheme: %v", err)
 			os.Exit(-1)
 		}
@@ -691,6 +694,7 @@ func InstallManifests(ctx context.Context, c client.Client, dClient discovery.Di
 				action = "updated"
 			}
 			// TODO: use test logger instead of Go logger
+			// TODO (@NickLarsenNZ): As above
 			log.Println(ResourceID(obj), action)
 
 			newCrd := apiextv1.CustomResourceDefinition{

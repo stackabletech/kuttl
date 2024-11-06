@@ -84,6 +84,7 @@ For more detailed documentation, visit: https://kuttl.dev`,
 				if _, err := os.Stat("kuttl-test.yaml"); err == nil {
 					configPath = "kuttl-test.yaml"
 				} else {
+					// TODO (@NickLarsenNZ): Use a logger
 					log.Println("running without a 'kuttl-test.yaml' configuration")
 				}
 			}
@@ -103,9 +104,11 @@ For more detailed documentation, visit: https://kuttl.dev`,
 						case *harness.TestSuite:
 							options = *ts
 						case *unstructured.Unstructured:
+							// TODO (@NickLarsenNZ): Use a logger
 							log.Println(fmt.Errorf("bad configuration in file %q", configPath))
 						}
 					} else {
+						// TODO (@NickLarsenNZ): Use a logger
 						log.Println(fmt.Errorf("unknown object type: %s", kind))
 					}
 				}
@@ -212,6 +215,7 @@ For more detailed documentation, visit: https://kuttl.dev`,
 			}
 
 			if len(args) != 0 {
+				// TODO (@NickLarsenNZ): Use a logger
 				log.Println("kutt-test config testdirs is overridden with args: [", strings.Join(args, ", "), "]")
 				options.TestDirs = args
 			}
@@ -220,6 +224,7 @@ For more detailed documentation, visit: https://kuttl.dev`,
 				return errors.New("no test directories provided, please provide either --config or test directories on the command line")
 			}
 			if mockControllerFile != "" {
+				// TODO (@NickLarsenNZ): Use a logger
 				log.Println("use of --control-plane-config is deprecated and no longer functions")
 			}
 
