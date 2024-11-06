@@ -1,0 +1,39 @@
+name: Build and push binary
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build_image:
+    permissions:
+      id-token: write
+    strategy:
+      matrix:
+        runner: ["ubuntu-latest", "ubicloud-standard-8-arm"]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      - name: Set up Cosign
+        uses: sigstore/cosign-installer@59acb6260d9c0ba8f4a2f9d9b48431a222b68e20 # tag=v3.5.0
+      - name: Build binary
+        run: make cli
+      - name: Sign binary with cosign
+        run: |
+          cosign sign-blob -y ./bin/kubectl-kuttl --bundle=./bin/kubectl-kuttl_signature.bundle
+      - name: Determine Architecture
+        run: |
+          echo "ARCH=$(arch)" >> "$GITHUB_ENV"
+      - name: Upload signature and binary to Nexus
+        env:
+          NEXUS_USERNAME: github
+          NEXUS_PASSWORD: ${{ secrets.NEXUS_PASSWORD }}
+        run: |
+          curl -u $NEXUS_USERNAME:$NEXUS_PASSWORD \
+            --upload-file ./bin/kubectl-kuttl \
+            https://repo.stackable.tech/repository/packages/kuttl/stable-${{ env.ARCH }}
+          curl -u $NEXUS_USERNAME:$NEXUS_PASSWORD \
+            --upload-file ./bin/kubectl-kuttl_signature.bundle \
+            https://repo.stackable.tech/repository/packages/kuttl/stable-${{ env.ARCH }}_signature.bundle
