@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	harness "github.com/kudobuilder/kuttl/pkg/apis/testharness/v1beta1"
-	testutils "github.com/kudobuilder/kuttl/pkg/test/utils"
+	harness "github.com/stackabletech/kuttl/pkg/apis/testharness/v1beta1"
+	testutils "github.com/stackabletech/kuttl/pkg/test/utils"
 )
 
 func TestHarnessRunIntegration(t *testing.T) {

@@ -54,15 +54,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
-	"github.com/kudobuilder/kuttl/pkg/apis"
-	harness "github.com/kudobuilder/kuttl/pkg/apis/testharness/v1beta1"
-	"github.com/kudobuilder/kuttl/pkg/env"
+	"github.com/stackabletech/kuttl/pkg/apis"
+	harness "github.com/stackabletech/kuttl/pkg/apis/testharness/v1beta1"
+	"github.com/stackabletech/kuttl/pkg/env"
 )
 
 // ensure that we only add to the scheme once.
 var schemeLock sync.Once
 
-// TODO (kensipe): need to consider options around AlwaysAdmin https://github.com/kudobuilder/kudo/pull/1420/files#r391449597
+// TODO (kensipe): need to consider options around AlwaysAdmin https://github.com/stackabletech/kudo/pull/1420/files#r391449597
 
 // IsJSONSyntaxError returns true if the error is a JSON syntax error.
 func IsJSONSyntaxError(err error) bool {

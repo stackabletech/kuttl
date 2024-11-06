@@ -11,8 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	harness "github.com/kudobuilder/kuttl/pkg/apis/testharness/v1beta1"
-	testutils "github.com/kudobuilder/kuttl/pkg/test/utils"
+	harness "github.com/stackabletech/kuttl/pkg/apis/testharness/v1beta1"
+	testutils "github.com/stackabletech/kuttl/pkg/test/utils"
 )
 
 // Verify the test state as loaded from disk.

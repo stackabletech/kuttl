@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/kudobuilder/kuttl/pkg/version"
+	"github.com/stackabletech/kuttl/pkg/version"
 )
 
 var (

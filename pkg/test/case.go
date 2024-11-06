@@ -24,10 +24,10 @@ import (
 	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/kudobuilder/kuttl/pkg/apis/testharness/v1beta1"
-	"github.com/kudobuilder/kuttl/pkg/k8s"
-	"github.com/kudobuilder/kuttl/pkg/report"
-	testutils "github.com/kudobuilder/kuttl/pkg/test/utils"
+	"github.com/stackabletech/kuttl/pkg/apis/testharness/v1beta1"
+	"github.com/stackabletech/kuttl/pkg/k8s"
+	"github.com/stackabletech/kuttl/pkg/report"
+	testutils "github.com/stackabletech/kuttl/pkg/test/utils"
 )
 
 // testStepRegex contains one capturing group to determine the index of a step file.
