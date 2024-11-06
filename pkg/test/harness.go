@@ -66,11 +66,7 @@ func determineNamespace(testcaseName string) string {
 	hasher.Write([]byte(testcaseName))
 	hash := hex.EncodeToString(hasher.Sum(nil))
 
-	truncatedFileName := testcaseName
-	if len(truncatedFileName) > 32 {
-		truncatedFileName = truncatedFileName[:32]
-	}
-	return fmt.Sprintf("kuttl-%s-%s", truncatedFileName, hash[:10])
+	return fmt.Sprintf("kuttl-%s", hash[:10])
 }
 
 // LoadTests loads all of the tests in a given directory.

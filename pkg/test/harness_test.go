@@ -90,5 +90,5 @@ func TestAddNodeCaches(t *testing.T) {
 }
 
 func TestDetermineNamespace(t *testing.T) {
-	assert.Equal(t, "kuttl-smoke_airflow-2.9.2_openshift-fa-c7e64f7a24", determineNamespace("smoke_airflow-2.9.2_openshift-false_executor-kubernetes"))
+	assert.Equal(t, "kuttl-c7e64f7a24", determineNamespace("smoke_airflow-2.9.2_openshift-false_executor-kubernetes"))
 }
