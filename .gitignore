@@ -67,3 +67,7 @@ tags
 [._]*.un~
 kubeconfig
 .kube
+
+# Nix / Direnv
+.direnv/
+.envrc
