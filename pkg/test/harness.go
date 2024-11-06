@@ -72,7 +72,7 @@ func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 	var tests []*Case
 
 	timeout := h.GetTimeout()
-	h.T.Logf("going to run test suite with timeout of %d seconds for each step", timeout)
+	h.logger.Logf("going to run test suite with timeout of %d seconds for each step", timeout)
 
 	for _, file := range files {
 		if !file.IsDir() {
@@ -97,7 +97,6 @@ func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 // GetLogger returns an initialized test logger.
 func (h *Harness) GetLogger() testutils.Logger {
 	if h.logger == nil {
-		// NOTE (@NickLarsenNZ): One instance of the logger created here
 		h.logger = testutils.NewTestLogger(h.T, "")
 	}
 
@@ -131,14 +130,14 @@ func (h *Harness) RunKIND() (*rest.Config, error) {
 			// which means we do not stop that cluster.  User will either need to switch to existing cluster or stop it.
 			h.kind = nil
 			msg := "KIND is already running, unable to start"
-			h.T.Log(msg)
+			h.logger.Log(msg)
 			return nil, errors.New(msg)
 		}
 
 		kindCfg := &kindConfig.Cluster{}
 
 		if h.TestSuite.KINDConfig != "" {
-			h.T.Logf("Loading KIND config from %s", h.TestSuite.KINDConfig)
+			h.logger.Logf("Loading KIND config from %s", h.TestSuite.KINDConfig)
 			var err error
 			kindCfg, err = h.loadKindConfig(h.TestSuite.KINDConfig)
 			if err != nil {
@@ -156,7 +155,7 @@ func (h *Harness) RunKIND() (*rest.Config, error) {
 
 		h.addNodeCaches(dockerClient, kindCfg)
 
-		h.T.Log("Starting KIND cluster")
+		h.logger.Log("Starting KIND cluster")
 		if err := h.kind.Run(kindCfg); err != nil {
 			return nil, err
 		}
@@ -174,7 +173,7 @@ func (h *Harness) RunKIND() (*rest.Config, error) {
 func (h *Harness) initTempPath() (err error) {
 	if h.tempPath == "" {
 		h.tempPath, err = os.MkdirTemp("", "kuttl")
-		h.T.Log("temp folder created", h.tempPath)
+		h.logger.Log("temp folder created", h.tempPath)
 	}
 	return err
 }
@@ -199,11 +198,11 @@ func (h *Harness) addNodeCaches(dockerClient testutils.DockerClient, kindCfg *ki
 			Name:   fmt.Sprintf("%s-%d", h.TestSuite.KINDContext, index),
 		})
 		if err != nil {
-			h.T.Log("error creating volume for node", err)
+			h.logger.Log("error creating volume for node", err)
 			continue
 		}
 
-		h.T.Log("node mount point", volume.Mountpoint)
+		h.logger.Log("node mount point", volume.Mountpoint)
 		kindCfg.Nodes[index].ExtraMounts = append(kindCfg.Nodes[index].ExtraMounts, kindConfig.Mount{
 			ContainerPath: "/var/lib/containerd",
 			HostPath:      volume.Mountpoint,
@@ -221,7 +220,7 @@ func (h *Harness) RunTestEnv() (*rest.Config, error) {
 		return nil, err
 	}
 
-	h.T.Logf("started test environment (kube-apiserver and etcd) in %v, with following options:\n%s",
+	h.logger.Logf("started test environment (kube-apiserver and etcd) in %v, with following options:\n%s",
 		time.Since(started),
 		strings.Join(testenv.Environment.ControlPlane.GetAPIServer().Configure().AsStrings(nil), "\n"))
 	h.env = testenv.Environment
@@ -244,16 +243,16 @@ func (h *Harness) Config() (*rest.Config, error) {
 	var err error
 	switch {
 	case h.TestSuite.Config != nil:
-		h.T.Log("running tests with passed rest config.")
+		h.logger.Log("running tests with passed rest config.")
 		h.config = h.TestSuite.Config.RC
 	case h.TestSuite.StartControlPlane:
-		h.T.Log("running tests with a mocked control plane (kube-apiserver and etcd).")
+		h.logger.Log("running tests with a mocked control plane (kube-apiserver and etcd).")
 		h.config, err = h.RunTestEnv()
 	case h.TestSuite.StartKIND:
-		h.T.Log("running tests with KIND.")
+		h.logger.Log("running tests with KIND.")
 		h.config, err = h.RunKIND()
 	default:
-		h.T.Log("running tests using configured kubeconfig.")
+		h.logger.Log("running tests using configured kubeconfig.")
 		h.config, err = k8s.GetConfig()
 		if err != nil {
 			return nil, err
@@ -276,7 +275,7 @@ func (h *Harness) Config() (*rest.Config, error) {
 		if err := h.waitForFunctionalCluster(); err != nil {
 			return nil, err
 		}
-		h.T.Logf("Successful connection to cluster at: %s", h.config.Host)
+		h.logger.Logf("Successful connection to cluster at: %s", h.config.Host)
 	}
 
 	// The creation of the "kubeconfig" is necessary for out of cluster execution of kubectl,
@@ -361,7 +360,7 @@ func (h *Harness) DockerClient() (testutils.DockerClient, error) {
 func (h *Harness) RunTests() {
 	// cleanup after running tests
 	h.T.Cleanup(h.Stop)
-	h.T.Log("running tests")
+	h.logger.Log("running tests")
 
 	testDirs := h.testPreProcessing()
 
@@ -373,7 +372,7 @@ func (h *Harness) RunTests() {
 		if err != nil {
 			h.T.Fatal(err)
 		}
-		h.T.Logf("testsuite: %s has %d tests", testDir, len(tempTests))
+		h.logger.Logf("testsuite: %s has %d tests", testDir, len(tempTests))
 		// array of test cases tied to testsuite (by testdir)
 		realTestSuite[testDir] = tempTests
 	}
@@ -392,9 +391,7 @@ func (h *Harness) RunTests() {
 					// elapsed time calculations.
 					t.Parallel()
 
-					// NOTE (@NickLarsenNZ): One instance of the logger created here
-					test.Logger = testutils.NewTestLogger(t, test.Name)
-					// test.Logger = h.GetLogger().WithPrefix(test.Name)
+					test.Logger = h.GetLogger().WithPrefix(test.Name)
 
 					if err := test.LoadTestSteps(); err != nil {
 						t.Fatal(err)
@@ -407,7 +404,7 @@ func (h *Harness) RunTests() {
 		}
 	})
 
-	h.T.Log("run tests finished")
+	h.logger.Log("run tests finished")
 }
 
 // testPreProcessing provides preprocessing bring all tests suites local if there are any refers to URLs
@@ -421,7 +418,7 @@ func (h *Harness) testPreProcessing() []string {
 				h.T.Fatal(err)
 			}
 			client := http.NewClient()
-			h.T.Logf("downloading %s", dir)
+			h.logger.Logf("downloading %s", dir)
 			// fresh temp dir created for each download to prevent overwriting
 			folder, err := os.MkdirTemp(h.tempPath, filepath.Base(dir))
 			if err != nil {
@@ -451,7 +448,7 @@ func (h *Harness) Run() {
 		signal.Notify(sigchan, os.Interrupt)
 		sig := <-sigchan
 		h.Stop()
-		h.T.Log("failed with", sig)
+		h.logger.Log("failed with", sig)
 		os.Exit(-1)
 	}()
 
@@ -462,9 +459,12 @@ func (h *Harness) Run() {
 // Setup spins up the test env based on configuration
 // It can be used to start env which can than be modified prior to running tests, otherwise use Run().
 func (h *Harness) Setup() {
-	rand.Seed(time.Now().UTC().UnixNano())
+	// NOTE (@NickLarsenNZ): The logger needs to be set (else segfault). Ideally this should be done in a Harness constructor.
+	h.GetLogger()
+
+	rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 	h.report = report.NewSuiteCollection(h.TestSuite.Name)
-	h.T.Log("starting setup")
+	h.logger.Log("starting setup")
 
 	cl, err := h.Client(false)
 	if err != nil {
@@ -515,7 +515,8 @@ func (h *Harness) Setup() {
 
 // Stop the test environment and clean up the harness.
 func (h *Harness) Stop() {
-	h.T.Log("cleaning up")
+	// h.logger.Log("cleaning up")
+	h.logger.Log("cleaning up")
 	if h.managerStopCh != nil {
 		close(h.managerStopCh)
 		h.managerStopCh = nil
@@ -524,26 +525,26 @@ func (h *Harness) Stop() {
 	if h.kind != nil {
 		logDir := filepath.Join(h.TestSuite.ArtifactsDir, fmt.Sprintf("kind-logs-%d", time.Now().Unix()))
 
-		h.T.Log("collecting cluster logs to", logDir)
+		h.logger.Log("collecting cluster logs to", logDir)
 
 		if err := h.kind.CollectLogs(logDir); err != nil {
-			h.T.Log("error collecting kind cluster logs", err)
+			h.logger.Log("error collecting kind cluster logs", err)
 		}
 	}
 
 	if h.bgProcesses != nil {
 		for _, p := range h.bgProcesses {
-			h.T.Logf("killing process %q", p)
+			h.logger.Logf("killing process %q", p)
 			err := p.Process.Kill()
 			if err != nil {
-				h.T.Logf("bg process: %q kill error %v", p, err)
+				h.logger.Logf("bg process: %q kill error %v", p, err)
 			}
 			ps, err := p.Process.Wait()
 			if err != nil {
-				h.T.Logf("bg process: %q kill wait error %v", p, err)
+				h.logger.Logf("bg process: %q kill wait error %v", p, err)
 			}
 			if ps != nil {
-				h.T.Logf("bg process: %q exit code %v", p, ps.ExitCode())
+				h.logger.Logf("bg process: %q exit code %v", p, ps.ExitCode())
 			}
 		}
 	}
@@ -553,34 +554,34 @@ func (h *Harness) Stop() {
 	if h.TestSuite.SkipClusterDelete {
 		cwd, err := os.Getwd()
 		if err != nil {
-			h.T.Logf("issue getting work directory %v", err)
+			h.logger.Logf("issue getting work directory %v", err)
 		}
 		kubeconfig := filepath.Join(cwd, "kubeconfig")
 
-		h.T.Log("skipping cluster tear down")
-		h.T.Logf("to connect to the cluster, run: export KUBECONFIG=\"%s\"", kubeconfig)
+		h.logger.Log("skipping cluster tear down")
+		h.logger.Logf("to connect to the cluster, run: export KUBECONFIG=\"%s\"", kubeconfig)
 
 		return
 	}
 
 	if h.env != nil {
-		h.T.Log("tearing down mock control plane")
+		h.logger.Log("tearing down mock control plane")
 		if err := h.env.Stop(); err != nil {
-			h.T.Log("error tearing down mock control plane", err)
+			h.logger.Log("error tearing down mock control plane", err)
 		}
 
 		h.env = nil
 	}
 
-	h.T.Logf("removing temp folder: %q", h.tempPath)
+	h.logger.Logf("removing temp folder: %q", h.tempPath)
 	if err := os.RemoveAll(h.tempPath); err != nil {
-		h.T.Log("error removing temporary directory", err)
+		h.logger.Log("error removing temporary directory", err)
 	}
 
 	if h.kind != nil {
-		h.T.Log("tearing down kind cluster")
+		h.logger.Log("tearing down kind cluster")
 		if err := h.kind.Stop(); err != nil {
-			h.T.Log("error tearing down kind cluster", err)
+			h.logger.Log("error tearing down kind cluster", err)
 		}
 
 		h.kind = nil
@@ -638,7 +639,7 @@ func (h *Harness) loadKindConfig(path string) (*kindConfig.Cluster, error) {
 		return nil, err
 	}
 	if !IsMinVersion(cluster.APIVersion) {
-		h.T.Logf("Warning: %q in %s is not a supported version.\n", cluster.APIVersion, path)
+		h.logger.Logf("Warning: %q in %s is not a supported version.\n", cluster.APIVersion, path)
 	}
 	return cluster, nil
 }

@@ -224,7 +224,7 @@ For more detailed documentation, visit: https://kuttl.dev`,
 				return errors.New("no test directories provided, please provide either --config or test directories on the command line")
 			}
 			if mockControllerFile != "" {
-				// TODO (@NickLarsenNZ): Use a logger
+				// TODO (@NickLarsenNZ): Use a logger, but we don't have access to the logger in the Harness
 				log.Println("use of --control-plane-config is deprecated and no longer functions")
 			}
 

@@ -523,6 +523,7 @@ func (t *Case) LoadTestSteps() error {
 			Asserts:       []client.Object{},
 			Apply:         []client.Object{},
 			Errors:        []client.Object{},
+			Logger:        t.Logger, // NOTE (@NickLarsenNZ): Pass the existing logger to the Step (else segfault)
 		}
 
 		for _, file := range files {

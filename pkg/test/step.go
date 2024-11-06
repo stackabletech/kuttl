@@ -630,8 +630,7 @@ func (s *Step) loadOrSkipFile(file string) (bool, []client.Object, error) {
 			if selector.Empty() || selector.Matches(s.TestRunLabels) {
 				continue
 			}
-			// TODO (@NickLarsenNZ): Use a logger
-			fmt.Printf("Skipping file %q, label selector does not match test run labels.\n", file)
+			s.Logger.Logf("Skipping file %q, label selector does not match test run labels.\n", file)
 			shouldSkip = true
 		} else {
 			objects = append(objects, object)
