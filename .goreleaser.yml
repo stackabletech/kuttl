@@ -12,7 +12,7 @@ builds:
     binary: kubectl-kuttl
     main: cmd/kubectl-kuttl/main.go
     ldflags:
-      - -s -w -X github.com/kudobuilder/kuttl/pkg/version.gitVersion={{ .Version }} -X github.com/kudobuilder/kuttl/pkg/version.gitCommit={{ .ShortCommit }} -X github.com/kudobuilder/kuttl/pkg/version.buildDate={{ .Date }}
+      - -s -w -X github.com/stackabletech/kuttl/pkg/version.gitVersion={{ .Version }} -X github.com/stackabletech/kuttl/pkg/version.gitCommit={{ .ShortCommit }} -X github.com/stackabletech/kuttl/pkg/version.buildDate={{ .Date }}
     goos:
       - linux
       - darwin
@@ -57,24 +57,6 @@ archives:
       {{- with .Mips }}_{{ . }}{{ end }}
       {{- if not (eq .Amd64 "v1") }}{{ .Amd64 }}{{ end }}
     format: binary
-brews:
-  - name: kuttl-cli
-    ids:
-      - kubectl-kuttl-tarball
-    repository:
-      owner: kudobuilder
-      name: homebrew-tap
-    commit_author:
-      name: kudoreleasebot
-      email: release@kudo.dev
-    skip_upload: auto
-    folder: Formula
-    homepage: https://kuttl.dev
-    description: Interact with KUTTL via the kubectl plugin
-    dependencies:
-      - kubernetes-cli
-    install: |
-      bin.install "kubectl-kuttl"
 checksum:
   name_template: "checksums.txt"
 snapshot:
@@ -82,7 +64,7 @@ snapshot:
 
 release:
   github:
-    owner: kudobuilder
+    owner: stackabletech
     name: kuttl
   draft: false
   prerelease: auto

@@ -26,7 +26,7 @@ RUN make cli
 
 # release image with kubectl + kuttl
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
-LABEL org.opencontainers.image.source="https://github.com/kudobuilder/kuttl"
+LABEL org.opencontainers.image.source="https://github.com/stackabletech/kuttl"
 
 RUN microdnf install vim tar gzip
 RUN echo 'alias vi=vim' >> ~/.bashrc
