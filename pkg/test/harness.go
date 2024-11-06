@@ -59,6 +59,20 @@ type Harness struct {
 	RunLabels     labels.Set
 }
 
+// Calculate the namespace to use for the test case
+// Get the sha256 hash the test case name
+func determineNamespace(testcaseName string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(testcaseName))
+	hash := hex.EncodeToString(hasher.Sum(nil))
+
+	truncatedFileName := testcaseName
+	if len(truncatedFileName) > 32 {
+		truncatedFileName = truncatedFileName[:32]
+	}
+	return fmt.Sprintf("kuttl-%s-%s", truncatedFileName, hash[:10])
+}
+
 // LoadTests loads all of the tests in a given directory.
 func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 	dir, err := filepath.Abs(dir)
@@ -81,22 +95,11 @@ func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 			continue
 		}
 
-		// Calculate the namespace to use for the test case
-		// Get the sha256 hash the test case name
-		hasher := sha256.New()
-		hasher.Write([]byte(file.Name()))
-		hash := hex.EncodeToString(hasher.Sum(nil))
-
-		truncatedFileName := file.Name()
-		if len(truncatedFileName) > 32 {
-			truncatedFileName = truncatedFileName[:32]
-		}
-
 		tests = append(tests, &Case{
 			Timeout:            timeout,
 			Steps:              []*Step{},
 			Name:               file.Name(),
-			PreferredNamespace: fmt.Sprintf("kuttl-%s-%s", hash[:10], truncatedFileName),
+			PreferredNamespace: determineNamespace(file.Name()),
 			Dir:                filepath.Join(dir, file.Name()),
 			SkipDelete:         h.TestSuite.SkipDelete,
 			Suppress:           h.TestSuite.Suppress,
