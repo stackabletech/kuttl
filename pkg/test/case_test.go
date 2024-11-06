@@ -425,3 +425,7 @@ func TestGetIndexFromFile(t *testing.T) {
 		})
 	}
 }
+
+func TestDetermineNamespace(t *testing.T) {
+	assert.Equal(t, "kuttl-c7e64f7a24", deriveNamespaceFromTestcaseName("smoke_airflow-2.9.2_openshift-false_executor-kubernetes"))
+}

@@ -3,8 +3,6 @@ package test
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -59,16 +57,6 @@ type Harness struct {
 	RunLabels     labels.Set
 }
 
-// Calculate the namespace to use for the test case
-// Get the sha256 hash the test case name
-func determineNamespace(testcaseName string) string {
-	hasher := sha256.New()
-	hasher.Write([]byte(testcaseName))
-	hash := hex.EncodeToString(hasher.Sum(nil))
-
-	return fmt.Sprintf("kuttl-%s", hash[:10])
-}
-
 // LoadTests loads all of the tests in a given directory.
 func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 	dir, err := filepath.Abs(dir)
@@ -95,7 +83,7 @@ func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 			Timeout:            timeout,
 			Steps:              []*Step{},
 			Name:               file.Name(),
-			PreferredNamespace: determineNamespace(file.Name()),
+			PreferredNamespace: h.TestSuite.Namespace,
 			Dir:                filepath.Join(dir, file.Name()),
 			SkipDelete:         h.TestSuite.SkipDelete,
 			Suppress:           h.TestSuite.Suppress,

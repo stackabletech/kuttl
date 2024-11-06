@@ -2,6 +2,8 @@ package test
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -11,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	petname "github.com/dustinkirkland/golang-petname"
 	"github.com/thoas/go-funk"
 	corev1 "k8s.io/api/core/v1"
 	eventsv1 "k8s.io/api/events/v1"
@@ -415,14 +416,23 @@ func (t *Case) Run(test *testing.T, ts *report.Testsuite) {
 	}
 }
 
+// Derive the namespace to use for the test case from its name
+func deriveNamespaceFromTestcaseName(testcaseName string) string {
+	hasher := sha256.New()
+	hasher.Write([]byte(testcaseName))
+	hash := hex.EncodeToString(hasher.Sum(nil))
+
+	return fmt.Sprintf("kuttl-%s", hash[:10])
+}
+
 func (t *Case) determineNamespace() (*namespace, error) {
 	ns := &namespace{
 		Name:        t.PreferredNamespace,
 		AutoCreated: false,
 	}
-	// no preferred ns, means we auto-create with petnames
+	// no preferred ns, means we derive the namespace from the test case name
 	if t.PreferredNamespace == "" {
-		ns.Name = fmt.Sprintf("kuttl-test-%s", petname.Generate(2, "-"))
+		ns.Name = deriveNamespaceFromTestcaseName(t.Name)
 		ns.AutoCreated = true
 	} else {
 		exist, err := t.NamespaceExists(t.PreferredNamespace)
