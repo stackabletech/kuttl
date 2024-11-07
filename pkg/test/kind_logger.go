@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/spf13/pflag"
@@ -53,27 +54,33 @@ func (k kindLogger) V(level log.Level) log.InfoLogger {
 }
 
 func (k kindLogger) Warn(message string) {
+	// TODO (@NickLarsenNZ): Replace Logger.Log with a method for the correct level (eg: Warn)
 	k.l.Log(message)
 }
 
 func (k kindLogger) Warnf(format string, args ...interface{}) {
-	k.l.Logf(format, args...)
+	// TODO (@NickLarsenNZ): Replace Logger.Log with a method for the correct level (eg: Warn)
+	k.l.Log(fmt.Sprintf(format, args...))
 }
 
 func (k kindLogger) Error(message string) {
+	// TODO (@NickLarsenNZ): Replace Logger.Log with a method for the correct level (eg: Error)
 	k.l.Log(message)
 }
 
 func (k kindLogger) Errorf(format string, args ...interface{}) {
-	k.l.Logf(format, args...)
+	// TODO (@NickLarsenNZ): Replace Logger.Log with a method for the correct level (eg: Error)
+	k.l.Log(fmt.Sprintf(format, args...))
 }
 
 func (k kindLogger) Info(message string) {
+	// TODO (@NickLarsenNZ): Replace Logger.Log with a method for the correct level (eg: Info)
 	k.l.Log(message)
 }
 
 func (k kindLogger) Infof(format string, args ...interface{}) {
-	k.l.Logf(format, args...)
+	// TODO (@NickLarsenNZ): Replace Logger.Log with a method for the correct level (eg: Info)
+	k.l.Log(fmt.Sprintf(format, args...))
 }
 
 func (k kindLogger) Enabled() bool {

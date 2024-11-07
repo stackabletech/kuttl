@@ -10,7 +10,6 @@ import (
 	"os/exec"
 	"os/signal"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -72,7 +71,7 @@ func (h *Harness) LoadTests(dir string) ([]*Case, error) {
 	var tests []*Case
 
 	timeout := h.GetTimeout()
-	h.logger.Logf("going to run test suite with timeout of %d seconds for each step", timeout)
+	h.logger.LogWithArgs("going to run test suite with timeout for each step", "timeout_seconds", timeout)
 
 	for _, file := range files {
 		if !file.IsDir() {
@@ -137,7 +136,7 @@ func (h *Harness) RunKIND() (*rest.Config, error) {
 		kindCfg := &kindConfig.Cluster{}
 
 		if h.TestSuite.KINDConfig != "" {
-			h.logger.Logf("Loading KIND config from %s", h.TestSuite.KINDConfig)
+			h.logger.LogWithArgs("Loading KIND config", h.TestSuite.KINDConfig)
 			var err error
 			kindCfg, err = h.loadKindConfig(h.TestSuite.KINDConfig)
 			if err != nil {
@@ -173,7 +172,7 @@ func (h *Harness) RunKIND() (*rest.Config, error) {
 func (h *Harness) initTempPath() (err error) {
 	if h.tempPath == "" {
 		h.tempPath, err = os.MkdirTemp("", "kuttl")
-		h.logger.Log("temp folder created", h.tempPath)
+		h.logger.LogWithArgs("temp folder created", "path", h.tempPath)
 	}
 	return err
 }
@@ -198,11 +197,11 @@ func (h *Harness) addNodeCaches(dockerClient testutils.DockerClient, kindCfg *ki
 			Name:   fmt.Sprintf("%s-%d", h.TestSuite.KINDContext, index),
 		})
 		if err != nil {
-			h.logger.Log("error creating volume for node", err)
+			h.logger.LogWithArgs("error creating volume for node", "error", err)
 			continue
 		}
 
-		h.logger.Log("node mount point", volume.Mountpoint)
+		h.logger.LogWithArgs("node mount point", "mount_path", volume.Mountpoint)
 		kindCfg.Nodes[index].ExtraMounts = append(kindCfg.Nodes[index].ExtraMounts, kindConfig.Mount{
 			ContainerPath: "/var/lib/containerd",
 			HostPath:      volume.Mountpoint,
@@ -220,9 +219,12 @@ func (h *Harness) RunTestEnv() (*rest.Config, error) {
 		return nil, err
 	}
 
-	h.logger.Logf("started test environment (kube-apiserver and etcd) in %v, with following options:\n%s",
+	h.logger.LogWithArgs("started test environment (kube-apiserver and etcd) in %v, with following options:\n%s",
+		"elapsed_time",
 		time.Since(started),
-		strings.Join(testenv.Environment.ControlPlane.GetAPIServer().Configure().AsStrings(nil), "\n"))
+		"options",
+		testenv.Environment.ControlPlane.GetAPIServer().Configure().AsStrings(nil),
+	)
 	h.env = testenv.Environment
 
 	return testenv.Config, nil
@@ -275,7 +277,7 @@ func (h *Harness) Config() (*rest.Config, error) {
 		if err := h.waitForFunctionalCluster(); err != nil {
 			return nil, err
 		}
-		h.logger.Logf("Successful connection to cluster at: %s", h.config.Host)
+		h.logger.LogWithArgs("Successful connection to cluster", "hostname", h.config.Host)
 	}
 
 	// The creation of the "kubeconfig" is necessary for out of cluster execution of kubectl,
@@ -372,7 +374,7 @@ func (h *Harness) RunTests() {
 		if err != nil {
 			h.T.Fatal(err)
 		}
-		h.logger.Logf("testsuite: %s has %d tests", testDir, len(tempTests))
+		h.logger.LogWithArgs("found testsuite", "path", testDir, "number_of_tests", len(tempTests))
 		// array of test cases tied to testsuite (by testdir)
 		realTestSuite[testDir] = tempTests
 	}
@@ -391,7 +393,7 @@ func (h *Harness) RunTests() {
 					// elapsed time calculations.
 					t.Parallel()
 
-					test.Logger = h.GetLogger().WithPrefix(test.Name)
+					test.Logger = h.GetLogger().WithGroup(test.Name)
 
 					if err := test.LoadTestSteps(); err != nil {
 						t.Fatal(err)
@@ -418,7 +420,7 @@ func (h *Harness) testPreProcessing() []string {
 				h.T.Fatal(err)
 			}
 			client := http.NewClient()
-			h.logger.Logf("downloading %s", dir)
+			h.logger.LogWithArgs("downloading", "path", dir)
 			// fresh temp dir created for each download to prevent overwriting
 			folder, err := os.MkdirTemp(h.tempPath, filepath.Base(dir))
 			if err != nil {
@@ -448,7 +450,7 @@ func (h *Harness) Run() {
 		signal.Notify(sigchan, os.Interrupt)
 		sig := <-sigchan
 		h.Stop()
-		h.logger.Log("failed with", sig)
+		h.logger.LogWithArgs("failed with", "signal", sig)
 		os.Exit(-1)
 	}()
 
@@ -525,26 +527,26 @@ func (h *Harness) Stop() {
 	if h.kind != nil {
 		logDir := filepath.Join(h.TestSuite.ArtifactsDir, fmt.Sprintf("kind-logs-%d", time.Now().Unix()))
 
-		h.logger.Log("collecting cluster logs to", logDir)
+		h.logger.LogWithArgs("collecting cluster logs", "path", logDir)
 
 		if err := h.kind.CollectLogs(logDir); err != nil {
-			h.logger.Log("error collecting kind cluster logs", err)
+			h.logger.LogWithArgs("error collecting kind cluster", "error", err)
 		}
 	}
 
 	if h.bgProcesses != nil {
 		for _, p := range h.bgProcesses {
-			h.logger.Logf("killing process %q", p)
+			h.logger.LogWithArgs("killing process", "pid", p)
 			err := p.Process.Kill()
 			if err != nil {
-				h.logger.Logf("bg process: %q kill error %v", p, err)
+				h.logger.LogWithArgs("failed to kill background process", "pid", p, "error", err)
 			}
 			ps, err := p.Process.Wait()
 			if err != nil {
-				h.logger.Logf("bg process: %q kill wait error %v", p, err)
+				h.logger.LogWithArgs("failed to wait for background process to exit", "pid", p, "error", err)
 			}
 			if ps != nil {
-				h.logger.Logf("bg process: %q exit code %v", p, ps.ExitCode())
+				h.logger.LogWithArgs("background process exited", "pid", p, "exit_code", ps.ExitCode())
 			}
 		}
 	}
@@ -554,12 +556,12 @@ func (h *Harness) Stop() {
 	if h.TestSuite.SkipClusterDelete {
 		cwd, err := os.Getwd()
 		if err != nil {
-			h.logger.Logf("issue getting work directory %v", err)
+			h.logger.LogWithArgs("failed to getting work directory", "path", err)
 		}
 		kubeconfig := filepath.Join(cwd, "kubeconfig")
 
 		h.logger.Log("skipping cluster tear down")
-		h.logger.Logf("to connect to the cluster, run: export KUBECONFIG=\"%s\"", kubeconfig)
+		h.logger.Log(fmt.Sprintf("to connect to the cluster, run: export KUBECONFIG=\"%s\"", kubeconfig))
 
 		return
 	}
@@ -567,21 +569,21 @@ func (h *Harness) Stop() {
 	if h.env != nil {
 		h.logger.Log("tearing down mock control plane")
 		if err := h.env.Stop(); err != nil {
-			h.logger.Log("error tearing down mock control plane", err)
+			h.logger.LogWithArgs("error tearing down mock control plane", "error", err)
 		}
 
 		h.env = nil
 	}
 
-	h.logger.Logf("removing temp folder: %q", h.tempPath)
+	h.logger.LogWithArgs("removing temp folder", "path", h.tempPath)
 	if err := os.RemoveAll(h.tempPath); err != nil {
-		h.logger.Log("error removing temporary directory", err)
+		h.logger.LogWithArgs("error removing temporary directory", "error", err)
 	}
 
 	if h.kind != nil {
 		h.logger.Log("tearing down kind cluster")
 		if err := h.kind.Stop(); err != nil {
-			h.logger.Log("error tearing down kind cluster", err)
+			h.logger.LogWithArgs("error tearing down kind cluster", "error", err)
 		}
 
 		h.kind = nil
@@ -639,7 +641,8 @@ func (h *Harness) loadKindConfig(path string) (*kindConfig.Cluster, error) {
 		return nil, err
 	}
 	if !IsMinVersion(cluster.APIVersion) {
-		h.logger.Logf("Warning: %q in %s is not a supported version.\n", cluster.APIVersion, path)
+		// TODO (@NickLarsenNZ): Should be a Warn, not Info
+		h.logger.Log(fmt.Sprintf("Warning: %q in %s is not a supported version.\n", cluster.APIVersion, path))
 	}
 	return cluster, nil
 }

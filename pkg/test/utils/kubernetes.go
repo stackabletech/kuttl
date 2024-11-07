@@ -1160,7 +1160,7 @@ func RunCommand(ctx context.Context, namespace string, cmd harness.Command, cwd 
 		return nil, fmt.Errorf("processing command %q with %w", cmd.String(), err)
 	}
 
-	logger.Logf("running command: %v", builtCmd.Args)
+	logger.LogWithArgs("running command", "command", strings.Join(builtCmd.Args, " "))
 
 	builtCmd.Dir = cwd
 	if !cmd.SkipLogOutput {
@@ -1250,7 +1250,7 @@ func RunCommands(ctx context.Context, logger Logger, namespace string, commands 
 		if err != nil {
 			cmdListSize := len(commands)
 			if i+1 < cmdListSize {
-				logger.Logf("command failure, skipping %d additional commands", cmdListSize-i-1)
+				logger.Error(fmt.Sprintf("command failure, skipping %d additional commands", cmdListSize-i-1))
 			}
 			return bgs, err
 		}
@@ -1263,7 +1263,7 @@ func RunCommands(ctx context.Context, logger Logger, namespace string, commands 
 	}
 
 	if len(bgs) > 0 {
-		logger.Log("background processes", bgs)
+		logger.LogWithArgs("background processes", bgs)
 	}
 	// handling of errs and bg processes external to this function
 	return bgs, nil

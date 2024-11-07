@@ -218,7 +218,7 @@ func (s *Step) Create(test *testing.T, namespace string) []error {
 			if updated {
 				action = "updated"
 			}
-			s.Logger.Log(testutils.ResourceID(obj), action)
+			s.Logger.LogWithArgs(testutils.ResourceID(obj), "action", action)
 		}
 	}
 
@@ -437,7 +437,7 @@ func (s *Step) Check(namespace string, timeout int) []error {
 // 1. Apply all desired objects to Kubernetes.
 // 2. Wait for all of the states defined in the test step's asserts to be true.'
 func (s *Step) Run(test *testing.T, namespace string) []error {
-	s.Logger.Log("starting test step", s.String())
+	s.Logger.LogWithArgs("starting test step", "step", s.String())
 
 	if err := s.DeleteExisting(namespace); err != nil {
 		return []error{err}
@@ -480,23 +480,24 @@ func (s *Step) Run(test *testing.T, namespace string) []error {
 
 	// all is good
 	if len(testErrors) == 0 {
-		s.Logger.Log("test step completed", s.String())
+		s.Logger.LogWithArgs("test step completed", "step", s.String())
 		return testErrors
 	}
 	// test failure processing
-	s.Logger.Log("test step failed", s.String())
+	s.Logger.ErrorWithArgs("test step failed", "step", s.String())
 	if s.Assert == nil {
 		return testErrors
 	}
 	for _, collector := range s.Assert.Collectors {
-		s.Logger.Logf("collecting log output for %s", collector.String())
+		// TODO (@NickLarsenNZ): Take a look at how collector logging is done
+		s.Logger.LogWithArgs("collecting log output for %s", "collector", collector.String())
 		if collector.Command() == nil {
-			s.Logger.Log("skipping invalid assertion collector")
+			s.Logger.LogWithArgs("skipping invalid assertion collector", "collector", collector.String())
 			continue
 		}
 		_, err := testutils.RunCommand(context.TODO(), namespace, *collector.Command(), s.Dir, s.Logger, s.Logger, s.Logger, s.Timeout, s.Kubeconfig)
 		if err != nil {
-			s.Logger.Log("post assert collector failure: %s", err)
+			s.Logger.ErrorWithArgs("post assert collector failure", "error", err)
 		}
 	}
 	s.Logger.Flush()
@@ -630,7 +631,7 @@ func (s *Step) loadOrSkipFile(file string) (bool, []client.Object, error) {
 			if selector.Empty() || selector.Matches(s.TestRunLabels) {
 				continue
 			}
-			s.Logger.Logf("Skipping file %q, label selector does not match test run labels.\n", file)
+			s.Logger.LogWithArgs("Skipping file, label selector does not match test run labels.", "path", file)
 			shouldSkip = true
 		} else {
 			objects = append(objects, object)
