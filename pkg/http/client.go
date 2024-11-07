@@ -98,6 +98,7 @@ func (c *Client) Download(url string, path string) error {
 	}
 
 	// The progress use the same line so print a new line once it's finished downloading
+	// TODO (@NickLarsenNZ): Use a logger
 	fmt.Println()
 
 	// Rename the tmp file back to the original file
@@ -125,10 +126,12 @@ func (wc *writeCounter) Write(p []byte) (int, error) {
 func (wc writeCounter) PrintProgress() {
 	// Clear the line by using a character return to go back to the start and remove
 	// the remaining characters by filling it with spaces
+	// TODO (@NickLarsenNZ): Use a logger
 	fmt.Printf("\r%s", strings.Repeat(" ", 100))
 
 	// Return again and print current status of download
 	// We use the humanize package to print the bytes in a meaningful way (e.g. 10 MB)
+	// TODO (@NickLarsenNZ): Use a logger
 	fmt.Printf("\rDownloading (%s) %s complete", wc.Name, humanize.Bytes(wc.Total))
 }
 

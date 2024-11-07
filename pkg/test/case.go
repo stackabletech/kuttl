@@ -60,11 +60,11 @@ type namespace struct {
 // DeleteNamespace deletes a namespace in Kubernetes after we are done using it.
 func (t *Case) DeleteNamespace(cl client.Client, ns *namespace) error {
 	if !ns.AutoCreated {
-		t.Logger.Log("Skipping deletion of user-supplied namespace:", ns.Name)
+		t.Logger.LogWithArgs("Skipping deletion of user-supplied namespace", "namespace", ns.Name)
 		return nil
 	}
 
-	t.Logger.Log("Deleting namespace:", ns.Name)
+	t.Logger.LogWithArgs("Deleting namespace", "namespace", ns.Name)
 
 	ctx := context.Background()
 	if t.Timeout > 0 {
@@ -83,7 +83,7 @@ func (t *Case) DeleteNamespace(cl client.Client, ns *namespace) error {
 	}
 
 	if err := cl.Delete(ctx, nsObj); k8serrors.IsNotFound(err) {
-		t.Logger.Logf("Namespace already cleaned up.")
+		t.Logger.LogWithArgs("Namespace already cleaned up", "namespace", ns.Name)
 	} else if err != nil {
 		return err
 	}
@@ -101,10 +101,10 @@ func (t *Case) DeleteNamespace(cl client.Client, ns *namespace) error {
 // CreateNamespace creates a namespace in Kubernetes to use for a test.
 func (t *Case) CreateNamespace(test *testing.T, cl client.Client, ns *namespace) error {
 	if !ns.AutoCreated {
-		t.Logger.Log("Skipping creation of user-supplied namespace:", ns.Name)
+		t.Logger.LogWithArgs("Skipping creation of user-supplied namespace", "namespace", ns.Name)
 		return nil
 	}
-	t.Logger.Log("Creating namespace:", ns.Name)
+	t.Logger.LogWithArgs("Creating namespace", "namespace", ns.Name)
 
 	ctx := context.Background()
 	if t.Timeout > 0 {
@@ -188,7 +188,7 @@ func (o byFirstTimestampCoreV1) Less(i, j int) bool {
 func (t *Case) CollectEvents(namespace string) {
 	cl, err := t.Client(false)
 	if err != nil {
-		t.Logger.Log("Failed to collect events for %s in ns %s: %v", t.Name, namespace, err)
+		t.Logger.ErrorWithArgs("Failed to collect events", "name", t.Name, "namespace", namespace, "error", err)
 		return
 	}
 
@@ -211,14 +211,16 @@ func (t *Case) collectEventsBeta1(cl client.Client, namespace string) error {
 
 	err := cl.List(context.TODO(), eventsList, client.InNamespace(namespace))
 	if err != nil {
-		t.Logger.Logf("Failed to collect events for %s in ns %s: %v", t.Name, namespace, err)
+		t.Logger.LogWithArgs("Failed to collect events", "name", t.Name, "namespace", namespace, "error", err)
 		return err
 	}
 
 	events := eventsList.Items
 	sort.Sort(byFirstTimestamp(events))
 
-	t.Logger.Logf("%s events from ns %s:", t.Name, namespace)
+	// TODO (@NickLarsenNZ): Use LogWithArgs
+	t.Logger.Log(fmt.Sprintf("%s events from ns %s:", t.Name, namespace))
+	// TODO (@NickLarsenNZ): make this log with a new group
 	printEventsBeta1(events, t.Logger)
 	return nil
 }
@@ -228,14 +230,16 @@ func (t *Case) collectEventsV1(cl client.Client, namespace string) error {
 
 	err := cl.List(context.TODO(), eventsList, client.InNamespace(namespace))
 	if err != nil {
-		t.Logger.Logf("Failed to collect events for %s in ns %s: %v", t.Name, namespace, err)
+		t.Logger.ErrorWithArgs("Failed to collect events", "name", t.Name, "namespace", namespace, "error", err)
 		return err
 	}
 
 	events := eventsList.Items
 	sort.Sort(byFirstTimestampV1(events))
 
-	t.Logger.Logf("%s events from ns %s:", t.Name, namespace)
+	// TODO (@NickLarsenNZ): Use LogWithArgs
+	t.Logger.Log(fmt.Sprintf("%s events from ns %s:", t.Name, namespace))
+	// TODO (@NickLarsenNZ): make this log with a new group
 	printEventsV1(events, t.Logger)
 	return nil
 }
@@ -245,59 +249,89 @@ func (t *Case) collectEventsCoreV1(cl client.Client, namespace string) error {
 
 	err := cl.List(context.TODO(), eventsList, client.InNamespace(namespace))
 	if err != nil {
-		t.Logger.Logf("Failed to collect events for %s in ns %s: %v", t.Name, namespace, err)
+		t.Logger.ErrorWithArgs("Failed to collect events", "name", t.Name, "namespace", namespace, "error", err)
 		return err
 	}
 
 	events := eventsList.Items
 	sort.Sort(byFirstTimestampCoreV1(events))
 
-	t.Logger.Logf("%s events from ns %s:", t.Name, namespace)
+	// TODO (@NickLarsenNZ): Use LogWithArgs
+	t.Logger.Log(fmt.Sprintf("%s events from ns %s:", t.Name, namespace))
+	// TODO (@NickLarsenNZ): make this log with a new group
 	printEventsCoreV1(events, t.Logger)
 	return nil
 }
 
+// TODO (@NickLarsenNZ): make this log with a new group
 func printEventsBeta1(events []eventsbeta1.Event, logger testutils.Logger) {
 	for _, e := range events {
 		// time type regarding action reason note reportingController related
-		logger.Logf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+		logger.LogWithArgs(fmt.Sprintf("Kubernetes Event (%s)", eventsbeta1.SchemeGroupVersion),
+			"creation_timestamp",
 			e.ObjectMeta.CreationTimestamp,
+			"type",
 			e.Type,
+			"regarding",
 			shortString(&e.Regarding),
+			"action",
 			e.Action,
+			"reason",
 			e.Reason,
+			"note",
 			e.Note,
+			"reporting_controller",
 			e.ReportingController,
-			shortString(e.Related))
+			"related",
+			shortString(e.Related),
+		)
 	}
 }
 
+// TODO (@NickLarsenNZ): make this log with a new group
 func printEventsV1(events []eventsv1.Event, logger testutils.Logger) {
 	for _, e := range events {
 		// time type regarding action reason note reportingController related
-		logger.Logf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+		logger.LogWithArgs(fmt.Sprintf("Kubernetes Event (%s)", eventsv1.SchemeGroupVersion),
+			"creation_timestamp",
 			e.ObjectMeta.CreationTimestamp,
+			"type",
 			e.Type,
+			"regarding",
 			shortString(&e.Regarding),
+			"action",
 			e.Action,
+			"reason",
 			e.Reason,
+			"note",
 			e.Note,
+			"reporting_controller",
 			e.ReportingController,
-			shortString(e.Related))
+			"related",
+			shortString(e.Related),
+		)
 	}
 }
 
 func printEventsCoreV1(events []corev1.Event, logger testutils.Logger) {
 	for _, e := range events {
 		// time type regarding action reason note reportingController related
-		logger.Logf("%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s",
+		logger.LogWithArgs(fmt.Sprintf("Kubernetes Event (%s)", corev1.SchemeGroupVersion),
+			"creation_timestamp",
 			e.ObjectMeta.CreationTimestamp,
+			"type",
 			e.Type,
+			"involved_object",
 			shortString(&e.InvolvedObject),
+			"action",
 			e.Action,
+			"reason",
 			e.Reason,
+			"message",
 			e.Message,
+			"reporting_controller",
 			e.ReportingController,
+			"related",
 			shortString(e.Related))
 	}
 }
@@ -352,7 +386,7 @@ func (t *Case) Run(test *testing.T, ts *report.Testsuite) {
 
 	for kc, c := range clients {
 		if err = t.CreateNamespace(test, c, ns); k8serrors.IsAlreadyExists(err) {
-			t.Logger.Logf("namespace %q already exists, using kubeconfig %q", ns.Name, kc)
+			t.Logger.LogWithArgs("namespace already exists", "namespace", "namespace", ns.Name, kc)
 		} else if err != nil {
 			setupReport.Failure = report.NewFailure("failed to create test namespace", []error{err})
 			ts.AddTestcase(setupReport)
@@ -371,7 +405,7 @@ func (t *Case) Run(test *testing.T, ts *report.Testsuite) {
 		if testStep.Kubeconfig != "" {
 			testStep.DiscoveryClient = newDiscoveryClient(testStep.Kubeconfig, testStep.Context)
 		}
-		testStep.Logger = t.Logger.WithPrefix(testStep.String())
+		testStep.Logger = t.Logger.WithGroup(testStep.String())
 		tc.Assertions += len(testStep.Asserts)
 		tc.Assertions += len(testStep.Errors)
 
@@ -383,7 +417,7 @@ func (t *Case) Run(test *testing.T, ts *report.Testsuite) {
 			if err != nil {
 				errs = append(errs, fmt.Errorf("failed to lazy-load kubeconfig: %w", err))
 			} else if err = t.CreateNamespace(test, cl, ns); k8serrors.IsAlreadyExists(err) {
-				t.Logger.Logf("namespace %q already exists", ns.Name)
+				t.Logger.LogWithArgs("namespace already exists", "namespace", ns.Name)
 			} else if err != nil {
 				errs = append(errs, fmt.Errorf("failed to create test namespace: %w", err))
 			}
@@ -398,7 +432,7 @@ func (t *Case) Run(test *testing.T, ts *report.Testsuite) {
 			caseErr := fmt.Errorf("failed in step %s", testStep.String())
 			tc.Failure = report.NewFailure(caseErr.Error(), errs)
 
-			test.Error(caseErr)
+			t.Logger.ErrorWithArgs("case error", "error", caseErr)
 			for _, err := range errs {
 				test.Error(err)
 			}
@@ -410,7 +444,8 @@ func (t *Case) Run(test *testing.T, ts *report.Testsuite) {
 	}
 
 	if funk.Contains(t.Suppress, "events") {
-		t.Logger.Logf("skipping kubernetes event logging")
+		// TODO (@NickLarsenNZ): Should be Debug, not Info
+		t.Logger.Log("skipping kubernetes event logging")
 	} else {
 		t.CollectEvents(ns.Name)
 	}
@@ -463,7 +498,7 @@ func (t *Case) CollectTestStepFiles() (map[int64][]string, error) {
 			return nil, err
 		}
 		if index < 0 {
-			t.Logger.Log("Ignoring", file.Name(), "as it does not match file name regexp:", testStepRegex.String())
+			t.Logger.LogWithArgs("ignoring file as it does not match file name regex", "filename", file.Name(), "regex", testStepRegex.String())
 			continue
 		}
 
@@ -523,6 +558,7 @@ func (t *Case) LoadTestSteps() error {
 			Asserts:       []client.Object{},
 			Apply:         []client.Object{},
 			Errors:        []client.Object{},
+			Logger:        t.Logger, // NOTE (@NickLarsenNZ): Pass the existing logger to the Step (else segfault)
 		}
 
 		for _, file := range files {

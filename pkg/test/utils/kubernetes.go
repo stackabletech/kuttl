@@ -318,14 +318,17 @@ func (r *RetryStatusWriter) Patch(ctx context.Context, obj client.Object, patch 
 func Scheme() *runtime.Scheme {
 	schemeLock.Do(func() {
 		if err := apis.AddToScheme(scheme.Scheme); err != nil {
+			// TODO (@NickLarsenNZ): Use a logger
 			fmt.Printf("failed to add API resources to the scheme: %v", err)
 			os.Exit(-1)
 		}
 		if err := apiextv1.AddToScheme(scheme.Scheme); err != nil {
+			// TODO (@NickLarsenNZ): Use a logger
 			fmt.Printf("failed to add V1 API extension resources to the scheme: %v", err)
 			os.Exit(-1)
 		}
 		if err := apiextv1beta1.AddToScheme(scheme.Scheme); err != nil {
+			// TODO (@NickLarsenNZ): Use a logger
 			fmt.Printf("failed to add V1beta1 API extension resources to the scheme: %v", err)
 			os.Exit(-1)
 		}
@@ -691,6 +694,7 @@ func InstallManifests(ctx context.Context, c client.Client, dClient discovery.Di
 				action = "updated"
 			}
 			// TODO: use test logger instead of Go logger
+			// TODO (@NickLarsenNZ): As above
 			log.Println(ResourceID(obj), action)
 
 			newCrd := apiextv1.CustomResourceDefinition{
@@ -1156,7 +1160,7 @@ func RunCommand(ctx context.Context, namespace string, cmd harness.Command, cwd 
 		return nil, fmt.Errorf("processing command %q with %w", cmd.String(), err)
 	}
 
-	logger.Logf("running command: %v", builtCmd.Args)
+	logger.LogWithArgs("running command", "command", strings.Join(builtCmd.Args, " "))
 
 	builtCmd.Dir = cwd
 	if !cmd.SkipLogOutput {
@@ -1246,7 +1250,7 @@ func RunCommands(ctx context.Context, logger Logger, namespace string, commands 
 		if err != nil {
 			cmdListSize := len(commands)
 			if i+1 < cmdListSize {
-				logger.Logf("command failure, skipping %d additional commands", cmdListSize-i-1)
+				logger.Error(fmt.Sprintf("command failure, skipping %d additional commands", cmdListSize-i-1))
 			}
 			return bgs, err
 		}
@@ -1259,7 +1263,7 @@ func RunCommands(ctx context.Context, logger Logger, namespace string, commands 
 	}
 
 	if len(bgs) > 0 {
-		logger.Log("background processes", bgs)
+		logger.LogWithArgs("background processes", bgs)
 	}
 	// handling of errs and bg processes external to this function
 	return bgs, nil

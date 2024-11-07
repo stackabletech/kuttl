@@ -47,11 +47,13 @@ func Assert(namespace string, timeout int, assertFiles ...string) error {
 	}
 
 	if len(testErrors) == 0 {
+		// TODO (@NickLarsenNZ): Use a logger
 		fmt.Printf("assert is valid\n")
 		return nil
 	}
 
 	for _, testError := range testErrors {
+		// TODO (@NickLarsenNZ): Use a logger
 		fmt.Println(testError)
 	}
 	return errors.New("asserts not valid")
@@ -94,11 +96,13 @@ func Errors(namespace string, timeout int, errorFiles ...string) error {
 	}
 
 	if len(testErrors) == 0 {
+		// TODO (@NickLarsenNZ): Use a logger
 		fmt.Printf("error assert is valid\n")
 		return nil
 	}
 
 	for _, testError := range testErrors {
+		// TODO (@NickLarsenNZ): Use a logger
 		fmt.Println(testError)
 	}
 	return errors.New("error asserts not valid")
