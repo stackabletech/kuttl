@@ -1,8 +1,6 @@
 module github.com/stackabletech/kuttl
 
-go 1.22.0
-
-toolchain go1.22.1
+go 1.23.0
 
 require (
 	github.com/Masterminds/semver/v3 v3.3.0
@@ -78,7 +76,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.28.0 // indirect
 	golang.org/x/mod v0.21.0 // indirect
 	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
+	golang.org/x/oauth2 v0.27.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/sys v0.26.0 // indirect
 	golang.org/x/term v0.25.0 // indirect
