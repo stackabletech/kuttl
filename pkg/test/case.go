@@ -68,7 +68,7 @@ func (t *Case) DeleteNamespace(cl client.Client, ns *namespace) error {
 	ctx := context.Background()
 	if t.Timeout > 0 {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
+		// ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
 		defer cancel()
 	}
 
