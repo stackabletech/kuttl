@@ -20,7 +20,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/discovery"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -69,7 +68,7 @@ func (t *Case) DeleteNamespace(cl client.Client, ns *namespace) error {
 	ctx := context.Background()
 	if t.Timeout > 0 {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
+		// ctx, cancel = context.WithTimeout(ctx, time.Duration(t.Timeout)*time.Second)
 		defer cancel()
 	}
 
@@ -88,14 +87,11 @@ func (t *Case) DeleteNamespace(cl client.Client, ns *namespace) error {
 		return err
 	}
 
-	return wait.PollUntilContextCancel(ctx, 100*time.Millisecond, true, func(ctx context.Context) (done bool, err error) {
-		actual := &corev1.Namespace{}
-		err = cl.Get(ctx, client.ObjectKey{Name: ns.Name}, actual)
-		if k8serrors.IsNotFound(err) {
-			return true, nil
-		}
-		return false, err
-	})
+	// Do not wait for the namespace to be deleted.
+	// Waiting for namespaces to be deleted wastes a lot of time especially on clusters
+	// where volumes take long to be reclaimed.
+	// Timeouts of this operation lead to test failures even though nothing is wrong with the test.
+	return nil
 }
 
 // CreateNamespace creates a namespace in Kubernetes to use for a test.
